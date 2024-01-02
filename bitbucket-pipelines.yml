@@ -1,0 +1,39 @@
+image: node:18
+
+pipelines:
+  default:
+    - step:
+        clone:
+          enabled: true
+        runs-on:
+          - self.hosted
+          - linux.shell
+          
+        name: Build & Deploy Angular App
+        script:
+          - cd angularapp
+          - pwd
+          - npm install --force
+          - npm run build
+          - rm -rf /var/www/html/frontend
+          - mkdir /var/www/html/frontend
+          - scp -r ./dist/browser/* /var/www/html/frontend
+          
+    - step:
+        clone:
+          enabled: true
+        runs-on:
+          - self.hosted
+          - linux.shell
+          
+        name: Build & Deploy Node App
+        script:
+          - cd nodeapp
+          - pwd
+          - npm install --force
+          - chmod 777 /var/www/*
+          - rm -rf /var/www/html/backend
+          - mkdir /var/www/html/backend
+          - scp -r ./* /var/www/html/backend
+          - pm2 delete backend-node
+          - pm2 start /var/www/html/backend/app.js --name backend-node
